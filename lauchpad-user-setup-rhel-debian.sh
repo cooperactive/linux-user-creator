@@ -10,7 +10,7 @@ trap cleanup EXIT
 read -p "Enter Launchpad Users (space-separated): " USERS
 
 # Prompt for the group name
-read -p "Enter the group name: " GROUP_NAME
+read -p "Enter the group name (leave empty if no additional group): " GROUP_NAME
 
 # Define the file path to save the usernames and passwords
 PASSWORDS_FILE=$(mktemp)
@@ -24,9 +24,11 @@ for user in $USERS; do
     echo "$user $password" >> "$PASSWORDS_FILE"
 done
 
-# Create group if it does not exist
-if ! getent group "$GROUP_NAME" >/dev/null; then
-    sudo groupadd "$GROUP_NAME"
+# Create group if it does not exist and GROUP_NAME is provided
+if [ -n "$GROUP_NAME" ]; then
+    if ! getent group "$GROUP_NAME" >/dev/null; then
+        sudo groupadd "$GROUP_NAME"
+    fi
 fi
 
 # Read the created usernames and passwords
@@ -42,9 +44,13 @@ for line in $(cat "$PASSWORDS_FILE"); do
 
     # Set user password
     echo -e "$password\n$password" | sudo passwd "$username"
-
-    # Add users to the group and sudo group
-    sudo usermod -aG "$GROUP_NAME" "$username"
+    
+    # Add users to the group if GROUP_NAME is provided
+    if [ -n "$GROUP_NAME" ]; then
+        sudo usermod -aG "$GROUP_NAME" "$username"
+    fi
+    
+    # Add users to the sudo group
     sudo usermod -aG sudo "$username"
 
     # Change Shell for users
