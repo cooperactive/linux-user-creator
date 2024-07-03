@@ -6,7 +6,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Prompt for users
+# Prompt for users // Prompt Launchpad usernames instead? So that SSH keys may be imported too.
 read -p "Enter the usernames (space-separated): " USERS
 
 # Prompt for the group name
@@ -50,6 +50,6 @@ for line in $(cat "$PASSWORDS_FILE"); do
     # Change Shell for users
     sudo chsh -s /bin/bash "$username"
 done
-
+# Add function that imports SSH keys from Launchpad.
 # Securely display the passwords file content
 cat "$PASSWORDS_FILE"
