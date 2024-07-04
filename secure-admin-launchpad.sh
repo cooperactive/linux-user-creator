@@ -86,7 +86,7 @@ done
 display_passwords() {
     local line
     echo "---------------------------------------------"
-    echo "|   Username   |         Password          |"
+    echo "|   Username   |         Password           |"
     echo "---------------------------------------------"
     while IFS= read -r line; do
         username=$(echo "$line" | awk '{print $1}')
