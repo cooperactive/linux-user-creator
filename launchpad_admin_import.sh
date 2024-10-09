@@ -51,7 +51,7 @@ fi
 import_ssh_keys() {
     local username=$1
     sudo -u "$username" mkdir -p "/home/$username/.ssh"
-    sudo -u "$username" wget -qO- "https://launchpad.net/~$username/+sshkeys" > "/home/$username/.ssh/authorized_keys"
+    sudo -u "$username" curl -s "https://launchpad.net/~$username/+sshkeys" -o "/home/$username/.ssh/authorized_keys"
     sudo chown -R "$username:$username" "/home/$username/.ssh"
     sudo chmod 700 "/home/$username/.ssh"
     sudo chmod 600 "/home/$username/.ssh/authorized_keys"
@@ -96,5 +96,5 @@ display_passwords() {
     echo "---------------------------------------------"
 }
 
-# Securely display the passwords file content
+# Securely display the password file content
 display_passwords
