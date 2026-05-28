@@ -32,10 +32,10 @@
 - Press `Win + X`, then press `A` to open PowerShell as an administrator.
 - Type the following command and press `Enter`:
   ```bash
-  ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+  ssh-keygen -t ecdsa -b 521 -C "your_email@example.com"
 
 ## 2.  Save the SSH Key Pair:
-- You will be prompted to "Enter file in which to save the key."
+- You will be prompted to "Enter file in which to save the key." IGNORE that prompt. 
 - Press Enter to accept the default location (C:\Users\YourUsername\.ssh\id_rsa).
 - It is recommended that the default location be used to avoid potential issues with access permissions.
 - It is recommended to protect the private key with a passphrase. Ensure it is strong but memorable, and consider backing it up securely (e.g., in Zoho) for your protection.
