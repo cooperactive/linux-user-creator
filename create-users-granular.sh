@@ -182,6 +182,31 @@ ensure_group_exists() {
     fi
 }
 
+get_user_home_dir() {
+    local local_user="$1"
+    getent passwd "$local_user" | cut -d: -f6
+}
+
+get_user_primary_group() {
+    local local_user="$1"
+    id -gn "$local_user"
+}
+
+ensure_user_home_dir() {
+    local local_user="$1"
+
+    local home_dir
+    home_dir="$(get_user_home_dir "$local_user")"
+    [[ -n "$home_dir" ]] || die "Could not determine home directory for $local_user."
+
+    if [[ ! -d "$home_dir" ]]; then
+        local primary_group
+        primary_group="$(get_user_primary_group "$local_user")"
+        info "Creating missing home directory '$home_dir' for user '$local_user'."
+        install -d -m 700 -o "$local_user" -g "$primary_group" "$home_dir"
+    fi
+}
+
 generate_password() {
     # Avoid characters that are awkward to copy/paste while keeping strong entropy.
     openssl rand -base64 24 | tr -d '\n' | tr -d '/+=' | cut -c1-24
@@ -243,17 +268,19 @@ install_ssh_keys() {
         die "Fetched SSH key data for '$remote_user' from '$ssh_source' was empty or invalid."
     fi
 
-    local home_dir
-    home_dir="$(getent passwd "$local_user" | cut -d: -f6)"
-    [[ -n "$home_dir" && -d "$home_dir" ]] || die "Could not determine home directory for $local_user."
+    ensure_user_home_dir "$local_user"
 
-    install -d -m 700 -o "$local_user" -g "$local_user" "$home_dir/.ssh"
+    local home_dir primary_group
+    home_dir="$(get_user_home_dir "$local_user")"
+    primary_group="$(get_user_primary_group "$local_user")"
+
+    install -d -m 700 -o "$local_user" -g "$primary_group" "$home_dir/.ssh"
 
     # Replace authorized_keys intentionally with the remote account's public keys.
     # Change this to >> if you want to append instead.
     printf '%s\n' "$keys" > "$home_dir/.ssh/authorized_keys"
 
-    chown "$local_user:$local_user" "$home_dir/.ssh/authorized_keys"
+    chown "$local_user:$primary_group" "$home_dir/.ssh/authorized_keys"
     chmod 600 "$home_dir/.ssh/authorized_keys"
 }
 
@@ -277,6 +304,8 @@ create_or_update_user() {
         info "Creating local user: $local_user"
         useradd --create-home --shell /bin/bash "$local_user"
     fi
+
+    ensure_user_home_dir "$local_user"
 
     if [[ "$set_password" == "yes" ]]; then
         local password
